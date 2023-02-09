@@ -1,0 +1,63 @@
+﻿@page "/"
+@page "/workreports"
+@using BlazorTimeCalculator.Data
+@using BlazorTimeCalculator.Model
+@using BlazorTimeCalculator.Services
+@using Microsoft.EntityFrameworkCore
+
+@inject WorkReportRepository workReportRepository;
+
+<h3>WorkReports</h3>
+
+<ul>
+@foreach (var item in workReports)
+{
+    <li><a href="workreport/@item.Id">@item.Description</a></li>
+}
+</ul>
+
+<hr />
+
+<EditForm Model="@workReport" OnValidSubmit="@SaveWorkReport">
+
+    <label>Description</label><br />
+    <InputText id="Description" @bind-Value="workReport.Description" /><br />
+
+    <input type="submit" value="Create" class="btn btn-primary mt-2" />
+</EditForm>
+
+
+@code {
+    private List<WorkReport> workReports = new();
+    private WorkReport workReport = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        workReports = await workReportRepository.GetAll();
+    }
+
+    protected async void SaveWorkReport()
+    {
+        if (string.IsNullOrWhiteSpace(workReport.Description))
+        {
+            return;
+        }
+
+        try
+        {
+            await workReportRepository.Create(workReport);
+            workReport = new WorkReport();
+        }
+        catch (Exception ex)
+        {
+            //log
+        }
+        finally
+        {
+            workReports = await workReportRepository.GetAll();
+        }
+
+
+    }
+
+}

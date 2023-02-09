@@ -1,0 +1,151 @@
+﻿@page "/workreport/{id}"
+@using BlazorTimeCalculator.Data
+@using BlazorTimeCalculator.Model
+@using BlazorTimeCalculator.Services
+@using Microsoft.EntityFrameworkCore
+
+@inject WorkReportRepository workReportRepository;
+
+<h3>WorkReport: @(workReport.Description)</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th scope="col" width="200">Fördelning</th>
+            <th scope="col" width="150">Timmar</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Total arbetad tid</td>
+            <td>@workReport.WorkTimeTotal</td>
+        </tr>
+        <tr>
+            <td>Varav tid med 0% ob</td>
+            <td>@workReport.ObZeroTotal</td>
+        </tr>
+        <tr>
+            <td>Varav tid med 50% ob</td>
+            <td>@workReport.Ob50Total</td>
+        </tr>
+        <tr>
+            <td>Varav tid med 70% ob</td>
+            <td>@workReport.Ob70Total</td>
+        </tr>
+        <tr>
+            <td>Varav tid med 100% ob</td>
+            <td>@workReport.Ob100Total</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr />
+
+<table>
+    <thead>
+        <tr>
+            <th scope="col" width="300">Description</th>
+            <th scope="col" width="150">Date</th>
+            <th scope="col" width="150">Start</th>
+            <th scope="col" width="150">End</th>
+            <th scope="col" width="150">Lunch</th>
+            <th scope="col" width="150">WorkTime</th>
+            <th scope="col" width="150">Ob0</th>
+            <th scope="col" width="150">Ob50</th>
+            <th scope="col" width="150">Ob70</th>
+            <th scope="col" width="150">Ob100</th>
+            <th scope="col" width="150">Check</th>
+        </tr>
+    </thead>
+    <tbody>
+
+@foreach (var item in workReport.WorkUnits)
+{
+            <tr>
+                <td>@item.Description</td>
+                <td>@item.Date</td>
+                <td>@item.StartTime</td>
+                <td>@item.EndTime</td>
+                <td>@item.Lunch</td>
+                <td>@item.TotalWorkTime</td>
+                <td>@item.TimeWithObZero</td>
+                <td>@item.TimeWithOb50</td>
+                <td>@item.TimeWithOb70</td>
+                <td>@item.TimeWithOb100</td>
+                <td>@item.Check</td>
+                <td><button class="btn btn-danger" @onclick="(() => Delete(item))">Delete</button></td>
+            </tr>
+}
+    </tbody>
+</table>
+
+<hr />
+
+<EditForm Model="@workUnit" OnValidSubmit="@SaveWorkUnit">
+
+    <label>Description</label><br />
+    <InputText id="Description" @bind-Value="workUnit.Description" /><br />
+
+    <label>Date</label><br />
+    <InputDate Type="InputDateType.Date" id="Date" @bind-Value="workUnit.Date" /><br />
+
+    <label>StartTime</label><br />
+    <InputDate Type="InputDateType.Time" id="StartTime" @bind-Value="workUnit.StartTime" /><br />
+
+    <label>EndTime</label><br />
+    <InputDate Type="InputDateType.Time" id="EndTime" @bind-Value="workUnit.EndTime" /><br />
+
+    <label>Lunch</label><br />
+    <InputDate Type="InputDateType.Time" id="Lunch" @bind-Value="workUnit.Lunch" /><br />
+
+    <input type="submit" value="Create" class="btn btn-primary mt-2" />
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private WorkReport workReport = new();
+
+    private WorkUnit workUnit = new WorkUnit();
+
+    protected async Task Delete(WorkUnit workUnit)
+    {
+        workReport.WorkUnits.Remove(workUnit);
+        await workReportRepository.Update(workReport);
+        workReport = await workReportRepository.GetById(int.Parse(Id));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        workReport = await workReportRepository.GetById(int.Parse(Id));
+    }
+
+    protected async void SaveWorkUnit()
+    {
+        if (string.IsNullOrWhiteSpace(workUnit.Description))
+        {
+            return;
+        }
+
+        try
+        {
+            workReport.WorkUnits.Add(workUnit);
+
+            await workReportRepository.Update(workReport);
+            workUnit = new WorkUnit();
+        }
+        catch (Exception ex)
+        {
+            //log
+        }
+        finally
+        {
+            workReport = await workReportRepository.GetById(int.Parse(Id));
+        }
+
+
+    }
+
+}
