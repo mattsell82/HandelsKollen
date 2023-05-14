@@ -28,8 +28,13 @@ namespace BlazorTimeCalculator.Services
             try
             {
                 var workReport = await _context.WorkReports
-                    .Include(w => w.WorkUnits)
-                    .FirstOrDefaultAsync(m => m.Id == id);
+                    .Include(w => w.WorkUnits.OrderBy(u => u.Date))
+                    .FirstOrDefaultAsync(w => w.Id == id);
+
+
+                var sortedWorkUnits = workReport.WorkUnits.OrderBy(w => w.Date).ThenBy(w => w.StartTime);
+
+                workReport.WorkUnits = sortedWorkUnits.ToList();
 
                 return workReport;
             }

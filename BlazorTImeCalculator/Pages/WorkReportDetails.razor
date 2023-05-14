@@ -5,6 +5,7 @@
 @using Microsoft.EntityFrameworkCore
 
 @inject WorkReportRepository workReportRepository;
+@inject WorkUnitREpository workUnitRepository;
 
 <h3>WorkReport: @(workReport.Description)</h3>
 
@@ -120,6 +121,7 @@
     protected override async Task OnInitializedAsync()
     {
         workReport = await workReportRepository.GetById(int.Parse(Id));
+
     }
 
     protected async void SaveWorkUnit()
